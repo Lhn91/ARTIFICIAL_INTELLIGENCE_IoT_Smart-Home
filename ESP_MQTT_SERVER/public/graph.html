@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YoloHome</title>
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- Socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Raleway -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+  <!-- Custom CSS cho switch -->
+  <style>
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+    }
+    input:checked + .slider {
+      background-color: #21f35d;
+    }
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .slider.round {
+      border-radius: 34px;
+    }
+    .slider.round:before {
+      border-radius: 50%;
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: center;
+      background-color: #edae0e;
+      padding: 10px;
+    }
+    .nav-bar a {
+      color: rgb(0, 0, 0);
+      padding: 10px 20px;
+      text-decoration: none;
+      font-size: 18px;
+    }
+    .nav-bar a:hover {
+      background-color: rgb(0, 0, 0);
+      color: #f4b027;
+    }
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+    }
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .header-title h4, .header-title h1 {
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-raleway">
+  <!-- Header -->
+  <header class="bg-blue-700 text-white py-6 shadow-lg">
+    <div class="container mx-auto header-container">
+      <div class="header-title">
+        <h4 class="text-lg">ĐỒ ÁN TRÍ TUỆ NHÂN TẠO YOLO HOME</h4>
+        <h1 class="text-4xl font-bold mt-2">DASHBOARD</h1>
+      </div>
+      <nav class="nav-bar">
+        <a href="/public/living_room.html"><strong>Phòng khách</strong></a>
+        <a href="/public/dining_room.html"><strong>Phòng ăn</strong></a>
+        <a href="/public/bedroom.html"><strong>Phòng ngủ</strong></a>
+        <a href="/public/bathroom.html"><strong>Phòng vệ sinh</strong></a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Temperature Card and Graph -->
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="bg-red-500 text-white p-4 rounded-lg shadow flex flex-col justify-center items-center w-full md:w-1/2 h-60">
+          <h3 class="text-xl font-semibold text-center w-full">Temperature</h3>
+          <div class="flex justify-between items-center w-full mt-4">
+            <label class="switch">
+              <input id="temp_check" type="checkbox" class="sensor-checkbox" data-sensor="temperature" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="mt-4 text-center">
+            <p id="temp_raw" class="text-4xl font-bold">52</p>
+            <a href="/public/detail.ejs" class="underline hover:text-gray-200 block mt-2">Temperature</a>
+          </div>
+        </div>
+        <div id="tempGraph" class="bg-white p-2 rounded-lg shadow h-60 w-full md:w-1/2"></div>
+      </div>
+      <!-- Pressure Card and Graph -->
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="bg-blue-500 text-white p-4 rounded-lg shadow flex flex-col justify-center items-center w-full md:w-1/2 h-60">
+          <h3 class="text-xl font-semibold text-center w-full">Pressure</h3>
+          <div class="flex justify-between items-center w-full mt-4">
+            <label class="switch">
+              <input id="pres_check" type="checkbox" class="sensor-checkbox" data-sensor="pressure" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="mt-4 text-center">
+            <p id="pres_raw" class="text-4xl font-bold">99</p>
+            <p class="mt-2">Pressure, hPa</p>
+          </div>
+        </div>
+        <div id="pressureGraph" class="bg-white p-2 rounded-lg shadow h-60 w-full md:w-1/2"></div>
+      </div>
+      <!-- Air Quality Card and Graph -->
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="bg-teal-500 text-white p-4 rounded-lg shadow flex flex-col justify-center items-center w-full md:w-1/2 h-60">
+          <h3 class="text-xl font-semibold text-center w-full">Air Quality</h3>
+          <div class="flex justify-between items-center w-full mt-4">
+            <label class="switch">
+              <input id="air_check" type="checkbox" class="sensor-checkbox" data-sensor="air" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="mt-4 text-center">
+            <p id="air_raw" class="text-4xl font-bold">23</p>
+          </div>
+        </div>
+        <div id="airQualityGraph" class="bg-white p-2 rounded-lg shadow h-60 w-full md:w-1/2"></div>
+      </div>
+      <!-- Light Intensity Card and Graph -->
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="bg-orange-500 text-white p-4 rounded-lg shadow flex flex-col justify-center items-center w-full md:w-1/2 h-60">
+          <h3 class="text-xl font-semibold text-center w-full">Light Intensity</h3>
+          <div class="flex justify-between items-center w-full mt-4">
+            <label class="switch">
+              <input id="light_check" type="checkbox" class="sensor-checkbox" data-sensor="light" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="mt-4 text-center">
+            <p id="light_raw" class="text-4xl font-bold">50</p>
+            <p class="mt-2">Light Control</p>
+          </div>
+        </div>
+        <div id="lightGraph" class="bg-white p-2 rounded-lg shadow h-60 w-full md:w-1/2"></div>
+      </div>
+    </div>
+
+    <!-- Gauge Graph Section -->
+    <section class="mt-10">
+      <h2 class="text-2xl font-bold text-center mb-6">Temperature Gauge</h2>
+      <div class="mt-8">
+        <div id="gaugeGraph" class="bg-white p-4 rounded-lg shadow h-80 mx-auto w-11/12"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Plotly Graph Scripts -->
+  <script>
+    // Initial data setup
+    let time = new Date();
+    let temperature = [];
+    let pressure = [];
+    let airQuality = [];
+    let lightIntensity = [];
+    let times = [time];
+
+    // Temperature - Scatter Plot
+    Plotly.newPlot('tempGraph', [{
+      x: times,
+      y: temperature,
+      mode: 'lines+markers',
+      name: 'Temperature (°C)',
+      line: { color: 'red' }
+    }], {
+      title: 'Temperature (°C)',
+      xaxis: { title: 'Time' },
+      yaxis: { title: 'Value' }
+    });
+
+    // Pressure - Scatter Plot
+    Plotly.newPlot('pressureGraph', [{
+      x: times,
+      y: pressure,
+      mode: 'lines+markers',
+      name: 'Pressure (hPa)',
+      line: { color: 'blue' }
+    }], {
+      title: 'Pressure (hPa)',
+      xaxis: { title: 'Time' },
+      yaxis: { title: 'Value' }
+    });
+
+    // Air Quality - Scatter Plot
+    Plotly.newPlot('airQualityGraph', [{
+      x: times,
+      y: airQuality,
+      mode: 'lines+markers',
+      name: 'Air Quality (AQI)',
+      line: { color: 'green' }
+    }], {
+      title: 'Air Quality (AQI)',
+      xaxis: { title: 'Time' },
+      yaxis: { title: 'Value' }
+    });
+
+    // Light Intensity - Scatter Plot
+    Plotly.newPlot('lightGraph', [{
+      x: times,
+      y: lightIntensity,
+      mode: 'lines+markers',
+      name: 'Light Intensity (Lux)',
+      line: { color: 'orange' }
+    }], {
+      title: 'Light Intensity (Lux)',
+      xaxis: { title: 'Time' },
+      yaxis: { title: 'Value' }
+    });
+
+    // Gauge Chart for Temperature
+    Plotly.newPlot('gaugeGraph', [{
+      type: "indicator",
+      mode: "gauge+number",
+      value: temperature[0],
+      title: { text: "Temperature (°C)" },
+      gauge: {
+        axis: { range: [0, 50] },
+        steps: [
+          { range: [0, 20], color: "lightblue" },
+          { range: [20, 30], color: "green" },
+          { range: [30, 50], color: "red" }
+        ],
+        threshold: {
+          line: { color: "black", width: 4 },
+          thickness: 0.75,
+          value: 30
+        }
+      }
+    }], {
+      title: 'Temperature Gauge'
+    });
+
+    // Function to update data for all plots
+    function updatePlot(data) {
+      let currentTime = new Date();
+      times.push(currentTime);
+      temperature.push(data.temperature);
+      pressure.push(data.pressure);
+      airQuality.push(data.airQuality);
+      lightIntensity.push(data.lightIntensity);
+
+      // Giới hạn số lượng điểm dữ liệu
+      const maxDataPoints = 20;
+      if (times.length > maxDataPoints) {
+        times.shift();
+        temperature.shift();
+        pressure.shift();
+        airQuality.shift();
+        lightIntensity.shift();
+      }
+
+      Plotly.update('tempGraph', { x: [times], y: [temperature] });
+      Plotly.update('pressureGraph', { x: [times], y: [pressure] });
+      Plotly.update('airQualityGraph', { x: [times], y: [airQuality] });
+      Plotly.update('lightGraph', { x: [times], y: [lightIntensity] });
+      Plotly.update('gaugeGraph', { value: data.temperature });
+    }
+  </script>
+
+  <!-- Socket.io & Sensor Data Handling -->
+  <script>
+    const socket = io();
+
+    // Object để lưu trạng thái sensor
+    let sensorStates = {
+      temperature: 0,
+      pressure: 0,
+      air: 0,
+      light: 0
+    };
+
+    // Hàm xử lý sự kiện checkbox
+    function handleCheckboxChange(event) {
+      const sensorName = event.target.dataset.sensor;
+      const sensorState = event.target.checked ? 1 : 0;
+      sensorStates[sensorName] = sensorState;
+      console.log(`${sensorName} sensor state: ${sensorState}`);
+      // Gửi data dưới dạng "sensor,state" (ví dụ: "light,1")
+      socket.emit('checkBoxData', `${sensorName},${sensorState}`);
+    }
+
+    // Lấy tất cả checkbox có class sensor-checkbox
+    const checkboxes = document.querySelectorAll('.sensor-checkbox');
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', handleCheckboxChange);
+    });
+
+    // Lắng nghe dữ liệu sensor từ server
+    socket.on('sensorData', (data) => {
+      setValues(data);
+      updatePlot(data);
+    });
+
+    // Cập nhật giá trị hiển thị
+    function setValues(data) {
+      document.getElementById('temp_raw').innerText = parseFloat(data.temperature).toFixed(2);
+      document.getElementById('pres_raw').innerText = parseFloat(data.pressure).toFixed(2);
+      document.getElementById('air_raw').innerText = parseFloat(data.airQuality).toFixed(2);
+      document.getElementById('light_raw').innerText = parseFloat(data.lightIntensity).toFixed(2);
+    }
+  </script>
+</body>
+</html>

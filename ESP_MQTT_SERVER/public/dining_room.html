@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phòng ăn</title>
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Raleway -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+</head>
+<body class="bg-gray-100 font-raleway">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white py-6 shadow-lg">
+    <div class="container mx-auto text-center">
+      <h1 class="text-4xl font-bold mt-2">Phòng ăn</h1>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Lighting Control -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-xl font-semibold">Lighting</h3>
+        <div class="mt-4">
+          <label class="switch">
+            <input type="checkbox" />
+            <span class="slider round"></span>
+          </label>
+          <p class="mt-2">Turn On/Off</p>
+        </div>
+      </div>
+      <!-- Air Conditioning Control -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-xl font-semibold">Air Conditioning</h3>
+        <div class="mt-4">
+          <label class="switch">
+            <input type="checkbox" />
+            <span class="slider round"></span>
+          </label>
+          <p class="mt-2">Turn On/Off</p>
+        </div>
+      </div>
+      <!-- Music Control -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-xl font-semibold">Music</h3>
+        <div class="mt-4">
+          <button class="bg-blue-500 text-white px-4 py-2 rounded">Play</button>
+          <button class="bg-red-500 text-white px-4 py-2 rounded">Stop</button>
+        </div>
+      </div>
+      <!-- TV Control -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-xl font-semibold">TV</h3>
+        <div class="mt-4">
+          <button class="bg-blue-500 text-white px-4 py-2 rounded">Turn On</button>
+          <button class="bg-red-500 text-white px-4 py-2 rounded">Turn Off</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

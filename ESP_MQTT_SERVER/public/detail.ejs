@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YOLO-HOME</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css" />
+  <!-- Socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Google Fonts: Raleway -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" />
+  <!-- Custom CSS cho switch (nếu cần) -->
+  <style>
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+    }
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .slider.round {
+      border-radius: 34px;
+    }
+    .slider.round:before {
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-raleway">
+  <!-- Header -->
+  <header id="myHeader" class="bg-blue-600 text-white py-6 shadow-lg">
+    <div class="container mx-auto text-center">
+      <h4 class="text-lg">MONITOR STATE OF SENSORS AT HOME</h4>
+      <h1 class="text-4xl font-bold mt-2">HOME AUTOMATION PROJECT</h1>
+      <div class="mt-4 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
+        <!-- Dropdown Time Selection -->
+        <div class="relative">
+          <button id="dropdownButton" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-black text-sm font-medium text-white hover:bg-gray-700 focus:outline-none">
+            Choose time <i class="fa fa-caret-down ml-2"></i>
+          </button>
+          <div id="dropdownMenu" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden">
+            <div class="py-1">
+              <label class="block px-4 py-2 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="option" value="minute" class="mr-2" onclick="displaySelected()"> Minutes
+              </label>
+              <label class="block px-4 py-2 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="option" value="hour" class="mr-2" onclick="displaySelected()"> Hours
+              </label>
+              <label class="block px-4 py-2 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="option" value="day" class="mr-2" onclick="displaySelected()"> Days
+              </label>
+              <label class="block px-4 py-2 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="option" value="year" class="mr-2" onclick="displaySelected()"> Years
+              </label>
+            </div>
+          </div>
+        </div>
+        <!-- Search Bar -->
+        <div class="flex">
+          <input id="search" type="text" placeholder="Search.." class="w-64 p-2 rounded-l-lg border border-gray-300" />
+          <button type="submit" class="bg-black text-white px-4 rounded-r-lg" onclick="searchBut()">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- General Parameters Section -->
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold text-center mb-6">Thông số chung</h2>
+        <div class="grid grid-cols-1 gap-6">
+          <!-- Temperature Card and Graph -->
+          <div class="flex flex-col md:flex-row items-center">
+            <div class="bg-red-500 text-white p-4 rounded-lg shadow flex flex-col justify-between w-full md:w-1/2">
+              <!-- ...existing code... -->
+            </div>
+            <div id="tempGraph" class="bg-white p-2 rounded-lg shadow h-40 w-full md:w-1/2"></div>
+          </div>
+          <!-- Pressure Card and Graph -->
+          <div class="flex flex-col md:flex-row items-center">
+            <div class="bg-blue-500 text-white p-4 rounded-lg shadow flex flex-col justify-between w-full md:w-1/2">
+              <!-- ...existing code... -->
+            </div>
+            <div id="pressureGraph" class="bg-white p-2 rounded-lg shadow h-40 w-full md:w-1/2"></div>
+          </div>
+          <!-- Air Quality Card and Graph -->
+          <div class="flex flex-col md:flex-row items-center">
+            <div class="bg-teal-500 text-white p-4 rounded-lg shadow flex flex-col justify-between w-full md:w-1/2">
+              <!-- ...existing code... -->
+            </div>
+            <div id="airQualityGraph" class="bg-white p-2 rounded-lg shadow h-40 w-full md:w-1/2"></div>
+          </div>
+          <!-- Light Intensity Card and Graph -->
+          <div class="flex flex-col md:flex-row items-center">
+            <div class="bg-orange-500 text-white p-4 rounded-lg shadow flex flex-col justify-between w-full md:w-1/2">
+              <!-- ...existing code... -->
+            </div>
+            <div id="lightGraph" class="bg-white p-2 rounded-lg shadow h-40 w-full md:w-1/2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Rooms Section -->
+      <section>
+        <h2 class="text-2xl font-bold text-center mb-6">Các phòng</h2>
+        <div class="grid grid-cols-1 gap-6">
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-xl font-semibold">Phòng khách</h3>
+            <!-- Add content for Phòng khách here -->
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-xl font-semibold">Phòng ăn</h3>
+            <!-- Add content for Phòng ăn here -->
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-xl font-semibold">Phòng ngủ</h3>
+            <!-- Add content for Phòng ngủ here -->
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-xl font-semibold">Phòng vệ sinh</h3>
+            <!-- Add content for Phòng vệ sinh here -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <hr class="my-6" />
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-bold">Sensor Data Record</h2>
+      <p class="text-lg">Selected Time Range: <span id="selectedOption">None</span></p>
+    </div>
+    <div class="bg-white shadow rounded-lg overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-blue-600">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Time</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Temperature</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Pressure</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Air Quality</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Light Control</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+          <!-- Dữ liệu sẽ được inject từ server thông qua EJS -->
+          <% data.forEach(item => { %>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap"><%= item.timestamp %></td>
+              <td class="px-6 py-4 whitespace-nowrap"><%= item.temperature %></td>
+              <td class="px-6 py-4 whitespace-nowrap"><%= item.pressure %></td>
+              <td class="px-6 py-4 whitespace-nowrap"><%= item.air_quality %></td>
+              <td class="px-6 py-4 whitespace-nowrap"><%= item.light_intensity %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <hr class="my-6" />
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-teal-600 text-white py-6 mt-8">
+    <div class="container mx-auto text-center">
+      <h3 class="text-xl font-bold">Footer</h3>
+      <p>
+        Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank" class="underline">w3.css</a>
+      </p>
+      <div class="mt-4 flex justify-end items-center space-x-2">
+        <span class="bg-white text-teal-600 px-3 py-1 rounded">Go To Top</span>
+        <a href="#myHeader" class="text-white text-2xl">
+          <i class="fa fa-chevron-circle-up"></i>
+        </a>
+      </div>
+      <p class="mt-4">
+        Remember to check out our <a href="w3css_references.asp" class="bg-white text-teal-600 px-3 py-1 rounded" target="_blank">W3.CSS Reference</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Dropdown, Search & Table Update Scripts -->
+  <script>
+    // Dropdown handling
+    const dropdownButton = document.getElementById('dropdownButton');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    dropdownButton.addEventListener('click', () => {
+      dropdownMenu.classList.toggle('hidden');
+    });
+
+    function displaySelected() {
+      const options = document.getElementsByName('option');
+      let selectedValue = 'None';
+      for (const option of options) {
+        if (option.checked) {
+          selectedValue = option.value;
+          break;
+        }
+      }
+      document.getElementById('selectedOption').innerText = selectedValue;
+    }
+
+    function searchBut() {
+      const searchInput = document.getElementById('search').value.trim();
+      const searchTimes = searchInput.split(',');
+      if (!searchTimes[0]) {
+        alert('Input field is empty');
+        return;
+      }
+      if (searchTimes.length === 2 && searchTimes[0] && searchTimes[1]) {
+        const times = {
+          timeStart: searchTimes[0].trim(),
+          timeEnd: searchTimes[1].trim()
+        };
+        socket.emit('searchTimeRange', times);
+        console.log(`timeStart: ${times.timeStart}, timeEnd: ${times.timeEnd}`);
+      } else {
+        alert('Please enter a valid time range in the format "start,end" (e.g., "1,2")');
+      }
+    }
+
+    // Socket.io & Table Update
+    const socket = io();
+    socket.on('recRange', (db) => {
+      console.log('back to html from server', db);
+      addSensorContent(db);
+    });
+
+    function addSensorContent(content) {
+      const tbody = document.getElementById('tableBody');
+      const newTbody = document.createElement('tbody');
+      newTbody.id = 'tableBody';
+      content.forEach(element => {
+        const tr = document.createElement('tr');
+        const timeStamp = document.createElement('td');
+        const temperature = document.createElement('td');
+        const pressure = document.createElement('td');
+        const air_quality = document.createElement('td');
+        const light_intensity = document.createElement('td');
+
+        timeStamp.textContent = element.timestamp;
+        temperature.textContent = element.temperature;
+        pressure.textContent = element.pressure;
+        air_quality.textContent = element.air_quality;
+        light_intensity.textContent = element.light_intensity;
+
+        tr.appendChild(timeStamp);
+        tr.appendChild(temperature);
+        tr.appendChild(pressure);
+        tr.appendChild(air_quality);
+        tr.appendChild(light_intensity);
+
+        tr.className = 'bg-white';
+        newTbody.appendChild(tr);
+      });
+      tbody.parentNode.replaceChild(newTbody, tbody);
+    }
+  </script>
+</body>
+</html>
