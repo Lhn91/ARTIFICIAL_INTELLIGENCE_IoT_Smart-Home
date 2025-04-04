@@ -6,6 +6,8 @@ const http = require('http');
 const server = http.createServer(app);
 const path = require('path');
 const { Server } = require("socket.io");
+const cron = require('node-cron'); // Import node-cron
+
 const io = new Server(server);
 const routes = require('./src/routes');
 const sensorModel = require('./src/models/sensors.model');
@@ -137,9 +139,6 @@ io.on('connection', (socket) => {
 
 });
 
-
-
-
 function convert_payload_str_to_obj(payload_str){
     const values = payload_str.split(',');
 
@@ -179,6 +178,49 @@ async function save_avg_sensor_data(data){
     }
 }
 
+cron.schedule('*/5 * * * * *', async () => {
+    console.log('Running a task every 5 seconds');
+    try {
+        const feeds = ['temperature', 'pressure', 'air-quality', 'light-intensity'];
+        let payload = {
+            temperature: null,
+            pressure: null,
+            airQuality: null,
+            lightIIntensity: null
+        };
+        for (const feed of feeds) {
+            const response = await fetch(`https://io.adafruit.com/api/v2/{thay = username}/feeds/${feed}`, { // THAY USERNAME, feed la ten key(name)cua feed tren adafruit
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-AIO-Key': '' // THAY KEY cua usser
+                }
+            });
+            const data = await response.json();
+            console.log(`Data from ${feed}:`, data.last_value);
+            if(feed === 'temperature') {
+                payload.temperature = data.last_value;
+            } else if(feed === 'pressure') {
+                payload.pressure = data.last_value;
+            } else if(feed === 'air-quality') {
+                payload.airQuality = data.last_value;
+            } else if(feed === 'light-intensity') {
+                payload.lightIntensity = data.last_value;
+            }
+        }
+        const response = await fetch('http://localhost:3000/api/sensor', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log(response.text());
+
+    } catch (err) {
+        console.error('Error calling API:', err);
+    }
+});
 
 server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
